@@ -1,13 +1,20 @@
 import Nav from "../components/Nav";
 import { useState } from 'react'
+
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
+
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios'
 
 const Onboarding = () => {
+
     const [ cookie, setCookie, removeCookie ] = useCookies(['user'])
+
     let navigate = useNavigate()
-    const [formData, setFormData] = useState({
+
+    const initialValues = {
         user_id: cookie.UserId,
         first_name:"",
         dob_day:"",
@@ -16,32 +23,37 @@ const Onboarding = () => {
         show_gender: false,
         gender_identity:"man",
         gender_interest:"woman",
-        ulr:"",
+        url:"",
         about:"",
         matches: []
-    })
-    const handleSubmit = async (e) => {
-        console.log('submitted')
-        e.preventDefault()
-        try{
-            const response = await axios.put('http://localhost:8000/user', { formData})
-            const success = response.status === 200
-            if (success) navigate('/dashboard')
-        } catch (err) {
-            console.log(err)
-        }
     }
 
-    const handleChange = (e) => {
-        console.log(e)
-        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
-        const name = e.target.name
-        console.log(value, name)
-        setFormData((prevState) => ({
-            ...prevState, [name]: value
-        }))
-    }
-    console.log(formData)
+    const validation = Yup.object({
+        first_name: Yup.string().required('Required'),
+        dob_day:  Yup.number().required('Day Required').max(31, 'DAY MAX 31'),
+        dob_month: Yup.number().required('Month Required').max(12, 'MONTH MAX 12'),
+        dob_year: Yup.number().required('Year Required').max(2005, 'MIN 18 LAT'),
+        show_gender: Yup.boolean(),
+        url: Yup.string(),
+        about: Yup.string(),
+    })
+
+    const formik = useFormik({
+        initialValues: initialValues,
+        validationSchema: validation,
+        onSubmit: async (values) => {
+            console.log('submitted')
+            console.log(values)
+            try{
+                const response = await axios.put('http://localhost:8000/user', { values})
+                const success = response.status === 200
+                if (success) navigate('/dashboard')
+            } catch (err) {
+                console.log(err)
+            }
+        }
+    })
+
     return (
         <>
             <Nav
@@ -52,7 +64,7 @@ const Onboarding = () => {
             />
             <div className="onboarding">
                 <h2>CREATE ACCOUNT</h2>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={formik.handleSubmit}>
                     <section>
                         <label htmlFor="first_name">First Name</label>
                         <input
@@ -60,11 +72,11 @@ const Onboarding = () => {
                             type="text"
                             name="first_name"
                             placeholder="First Name"
-                            required={true}
-                            value={formData.first_name}
-                            onChange={handleChange}
+                            {...formik.getFieldProps('first_name')}
 
                         />
+
+                        {formik.touched.first_name && formik.errors.first_name ? (<div>{formik.errors.first_name}</div>) : null}
                         <label>BirthDay</label>
 
                         <div className="multiple-input-container">
@@ -73,9 +85,7 @@ const Onboarding = () => {
                                 type="number"
                                 name="dob_day"
                                 placeholder="DD"
-                                required={true}
-                                value={formData.dob_day}
-                                onChange={handleChange}
+                                {...formik.getFieldProps('dob_day')}
                             />
 
                             <input
@@ -83,9 +93,7 @@ const Onboarding = () => {
                                 type="number"
                                 name="dob_month"
                                 placeholder="MM"
-                                required={true}
-                                value={formData.dob_month}
-                                onChange={handleChange}
+                                {...formik.getFieldProps('dob_month')}
                             />
 
                             <input
@@ -93,10 +101,14 @@ const Onboarding = () => {
                                 type="number"
                                 name="dob_year"
                                 placeholder="YYYY"
-                                required={true}
-                                value={formData.dob_year}
-                                onChange={handleChange}
+                                {...formik.getFieldProps('dob_year')}
                             />
+                            <div className="dob-errors">
+                                {formik.touched.dob_day && formik.errors.dob_day ? (<div>{formik.errors.dob_day}</div>) : null}
+                                {formik.touched.dob_month && formik.errors.dob_month ? (<div>{formik.errors.dob_month}</div>) : null}
+                                {formik.touched.dob_year && formik.errors.dob_year ? (<div>{formik.errors.dob_year}</div>) : null}
+                            </div>
+
                         </div>
                         <label>Gender</label>
 
@@ -107,8 +119,8 @@ const Onboarding = () => {
                                 type="radio"
                                 name="gender_identity"
                                 value="man"
-                                onChange={handleChange}
-                                checked={formData.gender_identity === 'man'}
+                                onChange={formik.handleChange}
+                                checked={formik.values.gender_identity === "man"}
                             />
                             <label htmlFor="man-gender-identity">Man</label>
 
@@ -117,8 +129,8 @@ const Onboarding = () => {
                                 type="radio"
                                 name="gender_identity"
                                 value="woman"
-                                onChange={handleChange}
-                                checked={formData.gender_identity === 'woman'}
+                                onChange={formik.handleChange}
+                                checked={formik.values.gender_identity === "woman"}
                             />
                             <label htmlFor="woman-gender-identity">Woman</label>
 
@@ -127,8 +139,8 @@ const Onboarding = () => {
                                 type="radio"
                                 name="gender_identity"
                                 value="more"
-                                onChange={handleChange}
-                                checked={formData.gender_identity === 'more'}
+                                onChange={formik.handleChange}
+                                checked={formik.values.gender_identity === "more"}
                             />
                             <label htmlFor="more-gender-identity">More</label>
 
@@ -139,8 +151,7 @@ const Onboarding = () => {
                             id="show-gender"
                             type="checkbox"
                             name="show_gender"
-                            onChange={handleChange}
-                            checked={formData.show_gender}
+                            {...formik.getFieldProps('show_gender')}
                         />
                         <label>Show me</label>
                         <div className={"multiple-input-container"}>
@@ -149,8 +160,8 @@ const Onboarding = () => {
                                 type="radio"
                                 name="gender_interest"
                                 value="man"
-                                onChange={handleChange}
-                                checked={formData.gender_interest === 'man'}
+                                onChange={formik.handleChange}
+                                checked={formik.values.gender_interest === "man"}
                             />
                             <label htmlFor="man-gender-interest">Man</label>
 
@@ -159,8 +170,8 @@ const Onboarding = () => {
                                 type="radio"
                                 name="gender_interest"
                                 value="woman"
-                                onChange={handleChange}
-                                checked={formData.gender_interest === 'woman'}
+                                onChange={formik.handleChange}
+                                checked={formik.values.gender_interest === "woman"}
                             />
                             <label htmlFor="woman-gender-interest">Woman</label>
 
@@ -169,8 +180,8 @@ const Onboarding = () => {
                                 type="radio"
                                 name="gender_interest"
                                 value="more"
-                                onChange={handleChange}
-                                checked={formData.gender_interest === 'more'}
+                                onChange={formik.handleChange}
+                                checked={formik.values.gender_interest === "more"}
                             />
                             <label htmlFor="everyone-gender-interest">Everyone</label>
                         </div>
@@ -179,14 +190,10 @@ const Onboarding = () => {
                             id="about"
                             type="text"
                             name="about"
-                            required={true}
                             placeholder="I like long walks..."
-                            value={formData.about}
-                            onChange={handleChange}
+                            {...formik.getFieldProps('about')}
                         />
-                        <input
-                            type="submit"
-                        />
+                        <input type='submit'/>
                     </section>
                     <section>
                         <label htmlFor="Profile"> Profile Picture </label>
@@ -194,11 +201,10 @@ const Onboarding = () => {
                             type="url"
                             name="url"
                             id="url"
-                            onChange={handleChange}
-                            required={true}
+                            {...formik.getFieldProps('url')}
                         />
                         <div className="photo-container">
-                            { formData.url && <img src={formData.url} alt="profile pic preview" />}
+                            { formik.values.url && <img src={formik.values.url} alt="profile pic preview" />}
                         </div>
 
                     </section>

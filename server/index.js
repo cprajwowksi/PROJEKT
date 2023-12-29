@@ -131,7 +131,7 @@ app.get('/gendered-users',async (req, res) => {
 
 app.put('/user', async (req, res) => {
     const client = new MongoClient(uri)
-    const formData = req.body.formData
+    const formData = req.body.values
     console.log(formData)
     try {
 

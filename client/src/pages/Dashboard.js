@@ -55,6 +55,7 @@ const Dashboard = () => {
     }
 
     const matchedUserIds =user?.matches.map(({ user_id }) => user_id).concat(userId)
+
     const filteredGenderedUsers =
         genderedUsers?.filter((genderedUser) => !matchedUserIds?.includes(genderedUser.user_id))
     const swiped = (direction, swipedUserId) => {
@@ -63,10 +64,13 @@ const Dashboard = () => {
         }
         setLastDirection(direction)
     }
+
     console.log(filteredGenderedUsers)
+
     const outOfFrame = (name) => {
         console.log(name + ' left the screen!')
     }
+
     return(
         <>
             { user &&

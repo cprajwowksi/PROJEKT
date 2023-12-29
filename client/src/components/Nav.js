@@ -8,12 +8,14 @@ const Nav = ({authToken, minimal, setShowModal, showModal, setIsSignUp}) => {
         setIsSignUp(false)
     }
 
+    console.log(authToken, minimal)
+
     return (
         <nav>
             <div className="logo-container">
                 <img className="logo" src={minimal ? colorLogo : whiteLogo}/>
             </div>
-            {!authToken && !minimal && <button
+            {!minimal && <button
                 className="nav-button"
                 onClick={handleClick}
                 disabled={showModal}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from 'axios'
+import {useNavigate} from "react-router-dom";
 const  ChatInput= ({ user, clickedUser, getUsersMessages, getClickedUsersMessages}) => {
     const [textArea, setTextArea] = useState("")
     const userId = user?.user_id
