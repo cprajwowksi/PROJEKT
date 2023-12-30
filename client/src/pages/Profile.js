@@ -1,11 +1,7 @@
-import { useState } from 'react'
-import {useCookies} from "react-cookie";
+import { useState, useReducer } from 'react'
 
 const Profile = () => {
 
-    const [ cookies, setCookie, removeCookie] = useCookies(['user'])
-
-    const authToken = cookies.authToken
 
     return (
         <>

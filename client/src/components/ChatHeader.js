@@ -22,7 +22,7 @@ const  ChatHeader= ({user}) => {
                 <button className="primary-button" onClick={() => navigate('/profile')}>Edit Profile</button>
             </div>
 
-            <i className="log-out-icon" onClick={logout}>back</i>
+            <button className="secondary-button hover:cursor-pointer"  onClick={logout}>Logout</button>
         </div>
     )
 }

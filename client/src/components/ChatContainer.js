@@ -10,9 +10,9 @@ const ChatContainer = ({ user }) => {
         <div className="chat-container">
             <ChatHeader user={user}/>
 
-            <div>
-                <button className="option" onClick={() => setClickedUser(null)}>Matches</button>
-                <button className="option" disabled={!clickedUser}>Chat</button>
+            <div className="w-full flex justify-center">
+                <button className="option w-1/3" onClick={() => setClickedUser(null)}>Matches</button>
+                <button className="option w-1/3" disabled={!clickedUser}>Chat</button>
             </div>
 
             {!clickedUser && <MatchesDisplay matches={user.matches} setClickedUser={setClickedUser}/>}

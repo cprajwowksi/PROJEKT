@@ -5,6 +5,7 @@ import { useCookies} from "react-cookie";
 
 const  MatchesDisplay = ({matches, setClickedUser}) => {
     const [matchedProfiles, setMatchedProfiles] = useState(null)
+
     const [cookies, setCookie, removeCookie] = useCookies(null)
     const userId = cookies.UserId
     const getMatches = async () => {
@@ -23,15 +24,21 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
     }
 
     useEffect(() => {
-        getMatches()
+        setInterval(() => getMatches(), 1000 )
     }, [matches]);
 
-    // const filteredMatchedProfiles = matchedProfiles?.filter(matchedProfile => matchedProfile.matches.filter(profile => profile.user_id == userId).length > 0)
-    const filteredMatchedProfiles = matchedProfiles
+    const filteredMatchedProfiles =
+        matchedProfiles
+            ?.filter(
+                matchedProfile =>
+                    matchedProfile
+                        .matches.filter(
+                            profile => profile.user_id == userId).length > 0)
+
     return (
-        <div className="chat-container">
+        <div className="m-3 shadow-lg">
             {filteredMatchedProfiles?.map((match, _index) =>
-                ( <div key={match.user_id} className="match-card" onClick={() => setClickedUser(match)}>
+                ( <div key={match.user_id} className="match-card p-4 " onClick={() => setClickedUser(match)}>
                         <div className="img-container">
                             <img src={match?.url} alt={match?.first_name + 'profile'}/>
                         </div>

@@ -30,7 +30,6 @@ const Dashboard = () => {
                 params: { gender: user?.gender_interest}
             })
             setGenderedUsers(response.data)
-            console.log(genderedUsers)
         } catch (err){
             console.log(err)
         }
@@ -38,8 +37,12 @@ const Dashboard = () => {
 
     useEffect(() => {
         getUser()
-        getGenderedUsers()
     }, []);
+
+    useEffect(() => {
+        getGenderedUsers()
+    }, [user]);
+
 
 
     const updatedMatches = async (matchedUserId) => {
@@ -64,8 +67,6 @@ const Dashboard = () => {
         }
         setLastDirection(direction)
     }
-
-    console.log(filteredGenderedUsers)
 
     const outOfFrame = (name) => {
         console.log(name + ' left the screen!')
