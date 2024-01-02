@@ -23,6 +23,7 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
         }
     }
 
+    // useMemo({matchedProfiles})
     useEffect(() => {
         setInterval(() => getMatches(), 1000 )
     }, [matches]);
@@ -33,7 +34,7 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
                 matchedProfile =>
                     matchedProfile
                         .matches.filter(
-                            profile => profile.user_id == userId).length > 0)
+                            profile => profile.user_id === userId).length > 0)
 
     return (
         <div className="m-3 shadow-lg">
