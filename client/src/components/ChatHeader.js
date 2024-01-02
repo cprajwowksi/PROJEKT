@@ -1,8 +1,11 @@
 import {useCookies} from "react-cookie";
 import { useNavigate } from "react-router-dom";
+import { useChatContext } from './ChatProvider';
 
-const  ChatHeader= ({user}) => {
+const  ChatHeader= () => {
     const [cookies, setCookie, removeCookie ] = useCookies(['user'])
+
+    const { user } = useChatContext();
 
     let navigate = useNavigate()
 

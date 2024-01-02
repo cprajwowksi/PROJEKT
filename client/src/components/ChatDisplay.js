@@ -2,13 +2,16 @@ import Chat from './Chat'
 import ChatInput from './ChatInput'
 import axios from 'axios'
 import {useState, useEffect} from "react"
+import { useChatContext } from './ChatProvider';
 
 
-const ChatDisplay = ({ user , clickedUser }) => {
+const ChatDisplay = ({ clickedUser }) => {
+    const { user } = useChatContext();
     const userId = user?.user_id
     const clickedUserId = clickedUser?.user_id
     const [usersMessages, setUsersMessages] = useState(null)
     const [clickedUsersMessages, setClickedUsersMessages] = useState(null)
+
 
     const getUsersMessages = async () => {
         try {
@@ -65,7 +68,6 @@ const ChatDisplay = ({ user , clickedUser }) => {
         <>
             <Chat descendingOrderMessages={descendingOrderMessages}/>
             <ChatInput
-                user={user}
                 clickedUser={clickedUser}
                 getUsersMessages={getUsersMessages}
                 getClickedUsersMessages={getClickedUsersMessages}

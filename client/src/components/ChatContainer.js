@@ -1,14 +1,18 @@
 import ChatHeader from './ChatHeader'
 import MatchesDisplay from './MatchesDisplay'
 import ChatDisplay from './ChatDisplay'
-import { useState } from 'react'
+import {useState, useEffect, useLayoutEffect} from 'react'
+import { useChatContext } from './ChatProvider';
 
-const ChatContainer = ({ user }) => {
+const ChatContainer = () => {
     const [ clickedUser, setClickedUser ] = useState(null)
+
+    const { user } = useChatContext();
+
 
     return (
         <div className="chat-container">
-            <ChatHeader user={user}/>
+            <ChatHeader/>
 
             <div className="w-full flex justify-center">
                 <button className="option w-1/3" onClick={() => setClickedUser(null)}>Matches</button>
@@ -17,7 +21,7 @@ const ChatContainer = ({ user }) => {
 
             {!clickedUser && <MatchesDisplay matches={user.matches} setClickedUser={setClickedUser}/>}
 
-            {clickedUser && <ChatDisplay user={user} clickedUser={clickedUser}/>}
+            {clickedUser && <ChatDisplay clickedUser={clickedUser}/>}
         </div>
     )
 }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import {useEffect, useState} from "react";
+import {useEffect, useState, useMemo, useLayoutEffect} from "react";
 
 import { useCookies} from "react-cookie";
 
@@ -28,13 +28,15 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
         setInterval(() => getMatches(), 1000 )
     }, [matches]);
 
-    const filteredMatchedProfiles =
-        matchedProfiles
-            ?.filter(
-                matchedProfile =>
-                    matchedProfile
-                        .matches.filter(
-                            profile => profile.user_id === userId).length > 0)
+
+    const filteredMatchedProfiles = useMemo(() => {
+        return matchedProfiles
+            ?.filter(matchedProfile =>
+                matchedProfile.matches.some(profile => profile.user_id === userId)
+            );
+    }, [matchedProfiles, userId]);
+
+
 
     return (
         <div className="m-3 shadow-lg">

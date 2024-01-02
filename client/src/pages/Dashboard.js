@@ -3,7 +3,7 @@ import TinderCard from "react-tinder-card";
 import { useCookies }from 'react-cookie'
 import ChatContainer from '../components/ChatContainer'
 import axios from "axios";
-
+import {ChatProvider} from "../components/ChatProvider";
 
 const Dashboard = () => {
 
@@ -44,7 +44,6 @@ const Dashboard = () => {
     }, [user]);
 
 
-
     const updatedMatches = async (matchedUserId) => {
         try {
             await axios.put('http://localhost:8000/addmatch', {
@@ -76,7 +75,9 @@ const Dashboard = () => {
         <>
             { user &&
         <div className="dashboard">
-            <ChatContainer user={user}/>
+            <ChatProvider user={user}>
+                <ChatContainer />
+            </ChatProvider>
             <div className="swipe-container">
                 <div className="card-container">
 
