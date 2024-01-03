@@ -93,7 +93,20 @@ app.get('/user', async (req, res) => {
     }
 })
 
-
+app.delete('/user', async (req, res) => {
+    const client = new MongoClient(uri)
+    const userId = req.query.userId
+    try {
+        await client.connect()
+        const database = client.db('Tinder')
+        const users = database.collection('users')
+        const query = { user_id: userId }
+        const user = await users.deleteOne(query)
+        res.send('DELETED')
+    } finally {
+        await client.close()
+    }
+})
 
 
 app.get('/users',async (req, res) => {
@@ -161,6 +174,37 @@ app.put('/user', async (req, res) => {
         await client.close()
     }
 })
+
+app.patch('/user', async (req, res) => {
+    const client = new MongoClient(uri)
+    const formData = req.body.values
+    console.log(formData)
+    try {
+
+        await client.connect()
+        const database = client.db('Tinder')
+        const users = database.collection('users')
+
+        const query = { user_id: formData.user_id }
+        const updateDocument = {
+            $set: {
+                first_name: formData.first_name,
+                dob_day: formData.dob_day,
+                dob_month: formData.dob_month,
+                dob_year: formData.dob_year,
+                show_gender: formData.show_gender,
+                gender_identity: formData.gender_identity,
+                gender_interest: formData.gender_interest,
+                about:formData.about,
+            }
+        }
+        const modifiedUser = await users.updateOne(query, updateDocument)
+        res.send(modifiedUser)
+    } finally {
+        await client.close()
+    }
+})
+
 
 
 app.put('/addmatch', async (req, res) => {

@@ -23,7 +23,6 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
         }
     }
 
-    // useMemo({matchedProfiles})
     useEffect(() => {
         setInterval(() => getMatches(), 1000 )
     }, [matches]);
@@ -41,7 +40,7 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
     return (
         <div className="m-3 shadow-lg">
             {filteredMatchedProfiles?.map((match, _index) =>
-                ( <div key={match.user_id} className="match-card p-4 " onClick={() => setClickedUser(match)}>
+                ( <div key={match.user_id} className="match-card p-4 hover:cursor-pointer hover:shadow" onClick={() => setClickedUser(match)}>
                         <div className="img-container">
                             <img src={match?.url} alt={match?.first_name + 'profile'}/>
                         </div>

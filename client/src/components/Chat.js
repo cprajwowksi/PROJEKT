@@ -8,18 +8,6 @@ const Chat = ({descendingOrderMessages}) => {
     const prevSenderRef = useRef(false);
     prevSenderRef.current = false
     const userekId = cookies.UserId
-    // const reducer = (state, action) => {
-    //     switch(action.type){
-    //         case 'DELETE':
-    //             return
-    //         case 'EDIT':
-    //             return
-    //         default:
-    //             return
-    //     }
-    // }
-    //
-    // const [state, dispatch] = useReducer(reducer, {messages: descendingOrderMessages})
 
     return (
         <>
