@@ -89,7 +89,8 @@ const Dashboard = () => {
                             onCardLeftScreen={() => outOfFrame(character.user_id)}>
                             <div style={{ backgroundImage: 'url(' + character.url + ')' }}
                                  className='card'>
-                                <h3>{character.name}</h3>
+                                <h3 className="text-4xl"><p className="p-2">{character.first_name}</p> <p>{new Date().getFullYear() - character.dob_year}</p></h3>
+
                             </div>
                         </TinderCard>
                     )}

@@ -18,6 +18,14 @@ h2{
   font-family: 'Readex Pro', sans-serif;
 }
 
+.card p {
+  background-image: linear-gradient(to right, #47cbc7, #2e4dcb); /* Replace these colors with your desired gradient */
+  background-clip: text;
+  -webkit-text-stroke-color:transparent;;
+  -webkit-background-clip: text;
+  -webkit-text-stroke-width: calc(1.5em / 16);
+}
+
 .primary-title{
   font-size: 90px;
   color: white;
