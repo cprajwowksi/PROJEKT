@@ -5,7 +5,7 @@ import { useCookies} from "react-cookie";
 
 const  MatchesDisplay = ({matches, setClickedUser}) => {
     const [matchedProfiles, setMatchedProfiles] = useState(null)
-
+    const [regex, setRegex] = useState(new RegExp(""))
     const [cookies, setCookie, removeCookie] = useCookies(null)
     const userId = cookies.UserId
     const getMatches = async () => {
@@ -24,7 +24,7 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
     }
 
     useEffect(() => {
-        setInterval(() => getMatches(), 1000 )
+        getMatches()
     }, [matches]);
 
 
@@ -32,13 +32,21 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
         return matchedProfiles
             ?.filter(matchedProfile =>
                 matchedProfile.matches.some(profile => profile.user_id === userId)
-            );
-    }, [matchedProfiles, userId]);
+            ).filter((x) => regex.test(x.first_name));
+    }, [matchedProfiles, userId,regex]);
 
 
+    const handleFilter = async (e) => {
+        await setRegex(new RegExp(e.target.value, 'i'));
+    };
 
     return (
         <div className="m-3 shadow-lg">
+            <div className="search-engine p-4 ">
+                <label className="text-lg m-4">Filtruj po imieniu </label>
+                <input  className="search-input fourth-button" type="text" onChange={handleFilter}/>
+            </div>
+
             {filteredMatchedProfiles?.map((match, _index) =>
                 ( <div key={match.user_id} className="match-card p-4 hover:cursor-pointer hover:shadow" onClick={() => setClickedUser(match)}>
                         <div className="img-container">

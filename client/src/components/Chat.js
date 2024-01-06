@@ -1,4 +1,4 @@
-import {useReducer, useRef, useEffect} from "react";
+import {useReducer, useRef, useEffect, useState} from "react";
 import { useCookies } from 'react-cookie'
 
 
@@ -7,7 +7,9 @@ const Chat = ({descendingOrderMessages}) => {
 
     const prevSenderRef = useRef(false);
     prevSenderRef.current = false
+
     const userekId = cookies.UserId
+
 
     return (
         <>

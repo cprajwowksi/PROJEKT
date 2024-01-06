@@ -23,6 +23,8 @@ const AuthModal = ({ setShowModal, setIsSignUp, isSignUp}) => {
     const handleSubmit =  async (e) => {
         e.preventDefault()
         try{
+
+
             if( isSignUp && (password !== confirmPassword) ){
                 setError('Passwords need to match!')
                 return

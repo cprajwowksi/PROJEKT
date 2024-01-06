@@ -21,7 +21,7 @@ const Profile = () => {
     const initialState = {
         profileDownloaded: false,
         importClicked: false,
-        submitEditionClicked: false,
+        submitEditionClicked: true,
         deleteProfileClicked: false,
         importedData: false,
         user: null,
@@ -140,6 +140,12 @@ const Profile = () => {
     return (
         <>
             <div className="profile-page">
+                <div className="footer-button flex justify-around m-3 " >
+                    <a className="fourth-button no-underline" download="CV.txt" href="../files/CV.txt">DOWNLOAD PROFILE</a>
+                    <button className="third-button" onClick={() => dispatch({ type: 'IMPORT_CLICKED' })}>IMPORT</button>
+                    <button className="primary-button" onClick={() => dispatch({ type: 'SUBMIT_EDITION_CLICKED' })}>DATA EDITION</button>
+                    <button className="secondary-button hover:cursor-pointer" onClick={() => dispatch({ type: 'DELETE_PROFILE_CLICKED' })}>DELETE PROFILE</button>
+                </div>
                 <div>
                     {state.editedUser && state.submitEditionClicked ? <ProfileChange user={state.user}/> : null}
                 </div>
@@ -158,11 +164,9 @@ const Profile = () => {
 
             </div>
                 <div className="footer-button flex justify-around m-3 " >
-                    <a className="fourth-button no-underline" download href="../files/CV.txt">DOWNLOAD PROFILE</a>
-                    <button className="third-button" onClick={() => dispatch({ type: 'IMPORT_CLICKED' })}>IMPORT</button>
+
                     <button className="primary-button" onClick={() => navigate('/dashboard')}>COME BACK</button>
-                    <button className="primary-button" onClick={() => dispatch({ type: 'SUBMIT_EDITION_CLICKED' })}>DATA EDITION</button>
-                    <button className="secondary-button hover:cursor-pointer" onClick={() => dispatch({ type: 'DELETE_PROFILE_CLICKED' })}>DELETE PROFILE</button>
+
                 </div>
             </div>
         </>
