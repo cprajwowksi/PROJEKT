@@ -83,3 +83,17 @@
     }
   }
 }
+
+.hoverable {
+  position: relative;
+  display: inline-block;
+}
+
+.hoverable i {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.hoverable:hover i {
+  opacity: 1;
+}

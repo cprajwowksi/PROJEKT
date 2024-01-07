@@ -1,7 +1,7 @@
 const PORT = 8000
 
 const express = require('express')
-const { MongoClient } = require('mongodb')
+const { MongoClient, ObjectId  } = require('mongodb')
 const  {v4: uuidv4 } = require('uuid')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
@@ -286,8 +286,28 @@ app.get('/messages',async (req, res) => {
        await client.close()
    }
 }
-
 )
+
+app.delete('/message', async (req, res) => {
+    const client = new MongoClient(uri)
+    const messageId = req.query.messageId
+    try {
+        await client.connect()
+        const database = client.db('Tinder')
+        const messages = database.collection('messages')
+        const toDelete = new ObjectId(messageId)
+        const query = { _id: toDelete }
+        console.log(query)
+        console.log(messageId)
+        const result = await messages.deleteOne(query)
+        res.send('DELETED')
+
+
+    } finally {
+        await client.close()
+    }
+})
+
 app.listen(PORT,
     () => console.log(`Server running on port ${PORT}`))
 
