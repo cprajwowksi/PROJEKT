@@ -67,9 +67,10 @@ app.post('/login', async (req, res) => {
                 user,
                 email,
                 {expiresIn: 60 * 24})
-            res.status(201).json({token, userId: user.user_id, email})
+            console.log(token)
+            return res.status(201).json({token, userId: user.user_id, email})
         }
-        res.status(400).send('Invalid')
+        return res.status(400).send('Invalid')
 
     } catch (err) {
         console.log(err)
