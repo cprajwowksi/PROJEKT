@@ -1,10 +1,10 @@
 import axios from "axios";
-import {useEffect, useState, useMemo, useLayoutEffect} from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import { useCookies} from "react-cookie";
 
 const  MatchesDisplay = ({matches, setClickedUser}) => {
-    const [matchedProfiles, setMatchedProfiles] = useState(null)
+    const [ matchedProfiles, setMatchedProfiles ] = useState([])
     const [regex, setRegex] = useState(new RegExp(""))
     const [cookies, setCookie, removeCookie] = useCookies(null)
     const userId = cookies.UserId
@@ -17,7 +17,7 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
                         userIds: JSON.stringify(matchedUserIds)
                 }
             })
-            setMatchedProfiles(response.data)
+            await setMatchedProfiles(response.data)
         } catch (err){
             console.log(err)
         }
@@ -30,12 +30,17 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
 
     const filteredMatchedProfiles = useMemo(() => {
         return matchedProfiles
-            ?.filter(matchedProfile =>
+            ?.filter((x) => regex.test(x.first_name))
+            .filter(matchedProfile =>
                 matchedProfile.matches.some(profile => profile.user_id === userId)
-            ).filter((x) => regex.test(x.first_name));
+            )
+
     }, [matchedProfiles, userId,regex]);
 
 
+    useEffect(() => {
+        console.log(matchedProfiles)
+    },[matchedProfiles])
     const handleFilter = async (e) => {
         await setRegex(new RegExp(e.target.value, 'i'));
     };
