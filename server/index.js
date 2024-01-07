@@ -228,7 +228,6 @@ app.put('/addmatch', async (req, res) => {
 app.get('/users', async (req, res) => {
     const client = new MongoClient(uri)
     const userIds = JSON.parse(req.query.userIds)
-    console.log(userIds)
     try{
         await client.connect()
         const database = client.db('Tinder')
@@ -244,7 +243,6 @@ app.get('/users', async (req, res) => {
             }
         ]
         const foundUsers = await users.aggregate(pipeline).toArray()
-        console.log(foundUsers)
         res.send(foundUsers)
 
     } finally {
@@ -269,7 +267,6 @@ app.post('/messages', async(req ,res) => {
 app.get('/messages',async (req, res) => {
     const client = new MongoClient(uri)
     const { userId, correspondingUserId } = req.query
-        console.log(userId, correspondingUserId)
    try{
         await client.connect()
        const database = client.db('Tinder')
@@ -280,7 +277,6 @@ app.get('/messages',async (req, res) => {
        }
 
        const foundMessages = await messages.find(query).toArray()
-       console.log('messages to', foundMessages)
        res.send(foundMessages)
    } finally {
        await client.close()
@@ -297,11 +293,31 @@ app.delete('/message', async (req, res) => {
         const messages = database.collection('messages')
         const toDelete = new ObjectId(messageId)
         const query = { _id: toDelete }
-        console.log(query)
-        console.log(messageId)
         const result = await messages.deleteOne(query)
         res.send('DELETED')
 
+
+    } finally {
+        await client.close()
+    }
+})
+
+app.patch('/message', async (req, res) => {
+    const client = new MongoClient(uri)
+    const {messageId, editedMessage} = req.body.params
+    try {
+        await client.connect()
+        const database = client.db('Tinder')
+        const messages = database.collection('messages')
+        const toEdited = new ObjectId(messageId)
+        const query = { _id: toEdited}
+        const updateDocument = {
+            $set: {
+                message: editedMessage
+            }
+        }
+        const result = await messages.updateOne(query, updateDocument)
+        res.send('EDITED')
 
     } finally {
         await client.close()
