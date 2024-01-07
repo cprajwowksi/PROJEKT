@@ -37,11 +37,11 @@ const Dashboard = () => {
 
     useEffect(() => {
         getUser()
-    }, []);
+    } );
 
     useEffect(() => {
         getGenderedUsers()
-    }, [user]);
+    });
 
 
     const updatedMatches = async (matchedUserId) => {

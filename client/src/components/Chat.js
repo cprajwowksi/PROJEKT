@@ -1,4 +1,4 @@
-import {useReducer, useRef, useEffect, useState, useOptimistic} from "react";
+import {useReducer, useRef, useEffect, useState} from "react";
 import { useCookies } from 'react-cookie'
 import axios from "axios";
 
@@ -24,10 +24,10 @@ const Chat = ({descendingOrderMessages}) => {
 
     const editMessage = async (message, edited) => {
         try {
-            const response = await axios.patch('http://localhost:8000/message', {
+            await axios.patch('http://localhost:8000/message', {
                 params: { messageId: message.id, editedMessage: edited }
             });
-            return response
+
         } catch (err) {
             console.log(err);
         }

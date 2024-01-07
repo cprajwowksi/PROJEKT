@@ -38,9 +38,6 @@ const  MatchesDisplay = ({matches, setClickedUser}) => {
     }, [matchedProfiles, userId,regex]);
 
 
-    useEffect(() => {
-        console.log(matchedProfiles)
-    },[matchedProfiles])
     const handleFilter = async (e) => {
         await setRegex(new RegExp(e.target.value, 'i'));
     };

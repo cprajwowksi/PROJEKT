@@ -3,12 +3,10 @@ import { useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 
-import { useCookies } from "react-cookie";
 import axios from 'axios'
 
 const ProfileChange = ({user}) => {
 
-    const [ cookie, setCookie, removeCookie ] = useCookies(['user'])
     const [ status, setStatus ] = useState(null)
 
     const initialValues = {
@@ -39,9 +37,7 @@ const ProfileChange = ({user}) => {
             console.log(values)
             try{
                 const response = await axios.patch('http://localhost:8000/user', { values})
-                const success = response.status === 200
                 setStatus(response.status)
-                console.log('resdata',response.data)
             } catch (err) {
                 console.log(err)
             }

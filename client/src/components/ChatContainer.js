@@ -1,7 +1,7 @@
 import ChatHeader from './ChatHeader'
 import MatchesDisplay from './MatchesDisplay'
 import ChatDisplay from './ChatDisplay'
-import {useState, useEffect, useLayoutEffect} from 'react'
+import {useState} from 'react'
 import { useChatContext } from './ChatProvider';
 
 const ChatContainer = () => {

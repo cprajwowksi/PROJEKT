@@ -73,7 +73,7 @@ const Profile = () => {
 
     useEffect(() => {
         getUser()
-    }, [])
+    })
 
 
     const handleFileChange = (e) => {
@@ -101,9 +101,7 @@ const Profile = () => {
 
                     if (haveSameKeys(jsonData,otherData1)) {
                         try{
-                            const response = await axios.patch('http://localhost:8000/user', { jsonData })
-                            const success = response.status === 200
-                            console.log('resdata',response.data)
+                            await axios.patch('http://localhost:8000/user', { jsonData })
                         } catch (err) {
                             console.log(err)
                         }

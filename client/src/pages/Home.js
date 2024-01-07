@@ -20,7 +20,7 @@ const Home = () => {
             removeCookie('UserId', cookies.UserId)
             removeCookie('AuthToken', cookies.AuthToken)
             window.location.reload()
-            return
+            return true
         }
     }
 
