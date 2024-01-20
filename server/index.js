@@ -587,7 +587,7 @@ app.get('/imionaMatches', (req, res) => {
             return users.find().toArray();
         })
         .then(user => {
-            const promisesArray = user.map(curr =>
+            const uzytkownicyZImionami = user.map(curr =>
                 Promise.all(
                     curr.matches.map(match =>
                         users.findOne({ "user_id": match.user_id })
@@ -595,7 +595,8 @@ app.get('/imionaMatches', (req, res) => {
                     )
                 )
             );
-            return Promise.all(promisesArray)
+
+            return Promise.all(uzytkownicyZImionami)
                 .then(result => {
                     return result.flat();
                 });
@@ -619,7 +620,9 @@ app.get('/imionaMatches', (req, res) => {
             res.status(400).send(error);
         })
         .finally(() => {
-            client.close().then((res) => console.log(res)).catch((err) => console.log(err));
+            client.close()
+                .then((res) => console.log(res))
+                .catch((err) => console.log(err));
         });
 });
 app.listen(PORT,
