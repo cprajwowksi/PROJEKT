@@ -587,18 +587,33 @@ app.get('/imionaMatches', (req, res) => {
             return users.find().toArray();
         })
         .then(user => {
-
-            return Promise.all(user.flatMap(curr => {
-                return curr.matches.map(match => {
-                    return users.findOne({ "user_id": match.user_id })
-                        .then(matchUser => ({ [curr.first_name]: matchUser ? matchUser.first_name : null }));
+            const promisesArray = user.map(curr =>
+                Promise.all(
+                    curr.matches.map(match =>
+                        users.findOne({ "user_id": match.user_id })
+                            .then(matchUser => ({ [curr.first_name]: matchUser ? matchUser.first_name : null }))
+                    )
+                )
+            );
+            return Promise.all(promisesArray)
+                .then(result => {
+                    return result.flat();
                 });
-            }));
-
         })
-        .then(reduced => {
-            // to jeszcze zreducowac aby to zgrupwoac i tyle
-            res.status(200).send(reduced);
+        .then(toReduce => {
+            const result = toReduce.reduce((acc, obj) => {
+                const user = Object.keys(obj)[0];
+                const value = obj[user];
+                if (!acc[user]) {
+                    acc[user] = [];
+                }
+                if (value){
+                    acc[user].push(value);
+                }
+                return acc;
+            }, {});
+
+            res.status(200).send(result);
         })
         .catch(error => {
             res.status(400).send(error);
