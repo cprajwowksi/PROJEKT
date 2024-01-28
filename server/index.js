@@ -1,8 +1,10 @@
+
 const PORT = 8000
 
+const yup = require('yup');
 const express = require('express')
-const { MongoClient, ObjectId  } = require('mongodb')
-const  {v4: uuidv4 } = require('uuid')
+const {MongoClient, ObjectId} = require('mongodb')
+const {v4: uuidv4} = require('uuid')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const cors = require('cors')
@@ -11,6 +13,25 @@ const app = express()
 app.use(cors());
 app.use(express.json());
 
+const userSchema = yup.object({
+    user_id: yup.string().required(),
+    about: yup.string().required(),
+    dob_day: yup.number().required().max(31),
+    dob_month: yup.number().required().max(12),
+    dob_year: yup.number().required().max(2024),
+    first_name: yup.string().required(),
+    gender_identity: yup.string().required().oneOf(['man', 'woman', 'more']),
+    gender_interest: yup.string().required().oneOf(['man', 'woman', 'more']),
+    show_gender: yup.boolean().required(),
+    nation: yup.string().required(),
+});
+
+const messageSchema = yup.object({
+    timestamp: yup.date().required(),
+    from_userId: yup.string().required(),
+    to_userId: yup.string().required(),
+    message: yup.string().required()
+})
 
 const uri = 'mongodb+srv://smaczniutkietosty:mypassword@cluster0.oxudjvz.mongodb.net/?retryWrites=true&w=majority'
 app.get('/', (req, res) => {
@@ -19,26 +40,47 @@ app.get('/', (req, res) => {
 app.post('/signup', async (req, res) => {
 
     const client = new MongoClient(uri)
-    const { email, password } = req.body
+    const {email, password, first_name, dob_day, dob_month, dob_year, show_gender, gender_identity, gender_interest, url, about, nation} = req.body
     const generatedUserId = uuidv4()
     const hashedpassword = await bcrypt.hash(password, 10)
-
     try {
         await client.connect()
         const database = client.db('Tinder')
         const users = database.collection('users')
         const existingUser = await users.findOne({email})
-        if (existingUser){
+        if (existingUser) {
             return res.status(409).send('User already exists. Please login')
 
         }
         const sanitizedEmail = email.toLowerCase()
 
-        const data = {
-            user_id:generatedUserId,
-            email:sanitizedEmail,
-            hashed_password:hashedpassword
+        function validateEmail(email) {
+            const emailRegex = /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/;
+            return emailRegex.test(email);
         }
+
+        if (!validateEmail(sanitizedEmail)) {
+            return res.status(400).send("Niepoprawny email")
+        }
+
+        const data = {
+            user_id: generatedUserId,
+            email: sanitizedEmail,
+            hashed_password: hashedpassword,
+            first_name: first_name,
+            dob_day: dob_day,
+            dob_month: dob_month,
+            dob_year: dob_year,
+            show_gender: show_gender,
+            gender_identity: gender_identity,
+            gender_interest: gender_interest,
+            url: url,
+            about: about,
+            matches: [],
+            nation: nation
+        }
+
+        await userSchema.validate(data, { abortEarly: false })
         const insertedUser = await users.insertOne(data)
 
         const token = jwt.sign(insertedUser, sanitizedEmail, {
@@ -46,13 +88,15 @@ app.post('/signup', async (req, res) => {
         })
         res.status(201).json({token, userId: generatedUserId, email: sanitizedEmail})
     } catch (err) {
-        console.log(err)
+        return res.status(400).send('Nieprawidłowe parametry')
+    } finally {
+        await client.close()
     }
 })
 
 app.post('/login', async (req, res) => {
     const client = new MongoClient(uri)
-    const { email, password } = req.body
+    const {email, password} = req.body
 
     try {
         await client.connect()
@@ -82,38 +126,53 @@ app.post('/login', async (req, res) => {
 app.get('/user', async (req, res) => {
     const client = new MongoClient(uri)
     const userId = req.query.userId
-    try{
-        await client.connect()
-        const database = client.db('Tinder')
-        const users = database.collection('users')
-        const query = { user_id: userId }
-        const user = await users.findOne(query)
-        res.send(user)
-    } finally {
-        await client.close()
-    }
-})
+    client.connect()
+        .then(() => {
+            const database = client.db('Tinder');
+            const users = database.collection('users');
+            const query = { user_id: userId };
+            return users.findOne(query);
+        })
+        .then((user) => {
+            if (user) {
+                return res.send(user)
+            } else {
+                return res.send('Nie znaleziono użytkownika o podanym ID')
+            }
+        })
+        .catch((err) => {
+            console.error(err)
+        })
+        .finally(() => client.close());
+});
 
 app.delete('/user', async (req, res) => {
-    const client = new MongoClient(uri)
-    const userId = req.query.userId
+    const client = new MongoClient(uri);
+    const userId = req.query.userId;
+
     try {
-        await client.connect()
-        const database = client.db('Tinder')
-        const users = database.collection('users')
-        const query = { user_id: userId }
-        const user = await users.deleteOne(query)
-        res.send('DELETED')
+        await client.connect();
+        const database = client.db('Tinder');
+        const users = database.collection('users');
+        const query = { user_id: userId };
+
+        const result = await users.deleteOne(query);
+
+        if (result.deletedCount === 0) {
+            res.send('Nikogo nie usunięto, nie ma użytkownika o takim ID');
+        } else {
+            res.send(`Usunięto użytkownika. Liczba usuniętych: ${result.deletedCount}`);
+        }
     } finally {
-        await client.close()
+        await client.close();
     }
-})
+});
 
 
-app.get('/users',async (req, res) => {
+app.get('/users', async (req, res) => {
     const client = new MongoClient(uri)
 
-    try{
+    try {
         await client.connect()
         const database = client.db('Tinder')
         const users = database.collection('users')
@@ -125,35 +184,54 @@ app.get('/users',async (req, res) => {
     }
 })
 
-app.get('/gendered-users',async (req, res) => {
-    const client = new MongoClient(uri)
-    const gender = req.query.gender
+app.get('/gendered-users', async (req, res) => {
+    const client = new MongoClient(uri);
+    const userId = req.query.userId;
 
-    try{
-        await client.connect()
-        const database = client.db('Tinder')
-        const users = database.collection('users')
-        const query = { gender_identity: gender}
-        const foundUsers = await users.find(query).toArray()
-        res.send(foundUsers)
+    try {
+        await client.connect();
+        const database = client.db('Tinder');
+        const users = database.collection('users');
+        const userquery = { user_id: userId };
+        const user = await users.findOne(userquery);
 
-    } finally {
-        await client.close()
+        if (user === null) {
+            return res.status(404).send('Nie ma takiego użytkownika');
+        }
+
+        const minAge = user.dob_year - 4;
+        const maxAge = user.dob_year + 4;
+
+        const query = {
+            gender_identity: user.gender_interest,
+            nation: user.nation,
+            dob_year: { $gte: minAge, $lte: maxAge },
+            user_id: { $nin: user.matches }
+        };
+
+        const foundUsers = await users.find(query).toArray();
+        res.send(foundUsers);
+    } catch(err) {
+        console.log(err)
     }
-})
+    finally
+    {
+        await client.close();
+    }
+});
+
 
 
 app.put('/user', async (req, res) => {
     const client = new MongoClient(uri)
     const formData = req.body.values
-    console.log(formData)
     try {
 
         await client.connect()
         const database = client.db('Tinder')
         const users = database.collection('users')
 
-        const query = { user_id: formData.user_id }
+        const query = {user_id: formData.user_id}
         const updateDocument = {
             $set: {
                 first_name: formData.first_name,
@@ -164,8 +242,8 @@ app.put('/user', async (req, res) => {
                 gender_identity: formData.gender_identity,
                 gender_interest: formData.gender_interest,
                 url: formData.url,
-                about:formData.about,
-                matches:formData.matches
+                about: formData.about,
+                matches: formData.matches
 
             }
         }
@@ -181,12 +259,16 @@ app.patch('/user', async (req, res) => {
     const formData = req.body.values
     console.log(formData)
     try {
-
         await client.connect()
+
+        await userSchema.validate(formData, { abortEarly: false });
         const database = client.db('Tinder')
         const users = database.collection('users')
 
         const query = { user_id: formData.user_id }
+
+
+
         const updateDocument = {
             $set: {
                 first_name: formData.first_name,
@@ -196,32 +278,90 @@ app.patch('/user', async (req, res) => {
                 show_gender: formData.show_gender,
                 gender_identity: formData.gender_identity,
                 gender_interest: formData.gender_interest,
-                about:formData.about,
+                about: formData.about,
+                nation: formData.nation
             }
         }
+
+        const existingUser = await users.findOne(query);
+
+        if (!existingUser) {
+            return res.status(404).send('Użytkownik nie istnieje');
+        }
+
+        const isUpdateNeeded = Object.keys(updateDocument.$set).some(key => existingUser[key] !== formData[key]);
+
+        if (!isUpdateNeeded) {
+            return res.status(409).send('Nowe dane są takie same jak obecne');
+        }
+
         const modifiedUser = await users.updateOne(query, updateDocument)
-        res.send(modifiedUser)
-    } finally {
+        return res.send(modifiedUser)
+    } catch (err) {
+        return res.status(400).send('Nieprawidłowe parametry')
+    }
+    finally {
         await client.close()
     }
 })
 
 
-
-app.put('/addmatch', async (req, res) => {
+app.put('/match', async (req, res) => {
     const client = new MongoClient(uri)
-    const { userId, matchedUserId } = req.body
+    const {userId, matchedUserId} = req.body
     try {
         await client.connect()
         const database = client.db('Tinder')
         const users = database.collection('users')
-        const query = { user_id: userId}
+        const query = {user_id: userId}
+        const gosc = await users.findOne(query)
+        const query2 = { user_id: matchedUserId}
+        const match = await users.findOne(query2)
+        if (match === null){
+            return res.status(404).send('Nie ma takiego użytkownika')
+        }
+
+        if (gosc.matches.filter((x) => x.user_id === matchedUserId).length !== 0){
+            return res.status(409).send('Wystarczy jedno w bazie')
+        }
+
         const updateDocument = {
-            $push: { matches: { user_id: matchedUserId}}
+            $push: {matches: {user_id: matchedUserId}}
         }
         const user = await users.updateOne(query, updateDocument)
         res.send(user)
-    } finally {
+    } catch (err){
+        res.status(404).send('Zle parametry')
+    }
+    finally {
+        await client.close()
+    }
+})
+app.delete('/match', async (req, res) => {
+    const client = new MongoClient(uri)
+    const {userId, matchedUserId} = req.body
+    try {
+        await client.connect()
+        const database = client.db('Tinder')
+        const users = database.collection('users')
+        const query = {user_id: userId}
+
+        const updateDocument = {
+            $pull: {matches: {user_id: matchedUserId}}
+        }
+        const gosc = await users.findOne(query)
+
+        if (gosc.matches.filter((x) => x.user_id === matchedUserId).length === 0){
+            return res.status(404).send('Nie ma czego usunac')
+        }
+
+        const user = await users.updateOne(query, updateDocument)
+        res.send(user)
+    } catch (err){
+        res.status(404).send('Zle parametry')
+    }
+    finally
+    {
         await client.close()
     }
 })
@@ -229,7 +369,7 @@ app.put('/addmatch', async (req, res) => {
 app.get('/users', async (req, res) => {
     const client = new MongoClient(uri)
     const userIds = JSON.parse(req.query.userIds)
-    try{
+    try {
         await client.connect()
         const database = client.db('Tinder')
         const users = database.collection('users')
@@ -251,38 +391,81 @@ app.get('/users', async (req, res) => {
     }
 })
 
-app.post('/messages', async(req ,res) => {
+app.post('/messages', async (req, res) => {
     const client = new MongoClient(uri)
     const message = req.body.message
     try {
         await client.connect()
-        const database =client.db('Tinder')
+        const database = client.db('Tinder')
+
+        const users= database.collection('users')
+
         const messages = database.collection('messages')
+
+        await messageSchema.validate(message, { abortEarly: false });
+
+        const usersQuery = { $or: [{ user_id: message.from_userId }, { user_id: message.to_userId }] };
+
+        const foundUsers = await users.find(usersQuery).toArray()
+
+        if (foundUsers.length === 0 ){
+            return res.status(404).send('Nie ma takich użytkowników')
+        }
+        if (foundUsers.length === 1 ) {
+            return res.status(404).send('Nie ma jednego użytkownika')
+        }
         const insertedmessage = await messages.insertOne(message)
         res.send(insertedmessage)
-
-    } finally {
+    } catch {
+        res.status(400).send('Zle parametry')
+    }
+    finally {
         await client.close()
     }
 })
-app.get('/messages',async (req, res) => {
-    const client = new MongoClient(uri)
-    const { userId, correspondingUserId } = req.query
-   try{
-        await client.connect()
-       const database = client.db('Tinder')
-       const messages = database.collection('messages')
+app.get('/messages', async (req, res) => {
+        const client = new MongoClient(uri)
+        const {userId, correspondingUserId} = req.query
+        try {
+            await client.connect()
+            const database = client.db('Tinder')
+            const messages = database.collection('messages')
+            const users = database.collection('users')
+            if (userId === undefined || correspondingUserId === undefined){
+                return res.status(400).send('Zle parametry')
+            }
 
-       const query = {
-           from_userId: userId, to_userId: correspondingUserId
-       }
+            const usersQuery = { $or: [{ user_id: userId }, { user_id: correspondingUserId }] };
+            const foundUsers = await users.find(usersQuery).toArray()
 
-       const foundMessages = await messages.find(query).toArray()
-       res.send(foundMessages)
-   } finally {
-       await client.close()
-   }
-}
+            if (foundUsers.length === 0 ){
+                return res.status(404).send('Nie ma takich użytkowników')
+            } else if (foundUsers.length === 1 ){
+                return res.status(404).send('Nie ma jednego użytkownika')
+            } else {
+                const query = {
+                    from_userId: userId, to_userId: correspondingUserId
+                }
+                const query2 = {
+                    from_userId: correspondingUserId, to_userId: userId
+                }
+                const foundMessages = await messages.find(query).toArray()
+                const theirMessages = await messages.find(query2).toArray()
+
+                const allMessages = [...foundMessages,...theirMessages].sort((a,b) => a.timestamp.localeCompare(b.timestamp))
+
+                return res.send(allMessages)
+            }
+
+        } catch (err) {
+            console.log(err)
+            res.send('ERROR UWAGA')
+        }
+        finally
+        {
+            await client.close()
+        }
+    }
 )
 
 app.delete('/message', async (req, res) => {
@@ -293,9 +476,14 @@ app.delete('/message', async (req, res) => {
         const database = client.db('Tinder')
         const messages = database.collection('messages')
         const toDelete = new ObjectId(messageId)
-        const query = { _id: toDelete }
+        const query = {_id: toDelete}
+        const message = await messages.findOne(query)
+        if (!message){
+            return res.status(404).send('Nie ma wiadomosci o takim ID')
+        }
+
         const result = await messages.deleteOne(query)
-        res.send('DELETED')
+        res.send(result)
 
 
     } finally {
@@ -305,26 +493,138 @@ app.delete('/message', async (req, res) => {
 
 app.patch('/message', async (req, res) => {
     const client = new MongoClient(uri)
-    const {messageId, editedMessage} = req.body.params
+    const { messageId, editedMessage } = req.body
+
     try {
         await client.connect()
         const database = client.db('Tinder')
         const messages = database.collection('messages')
         const toEdited = new ObjectId(messageId)
-        const query = { _id: toEdited}
+        const query = {_id: toEdited}
+
+        const message = await messages.findOne(query)
+        if (!message){
+            return res.status(404).send('Nie ma wiadomosci o takim ID')
+        }
+
         const updateDocument = {
             $set: {
                 message: editedMessage
             }
         }
         const result = await messages.updateOne(query, updateDocument)
-        res.send('EDITED')
+        res.send(result)
 
     } finally {
         await client.close()
     }
 })
 
+app.get('/gmails', async (req, res) => {
+    const client = new MongoClient(uri)
+
+    try {
+        const regex = /@gmail\.com$/;
+
+        await client.connect()
+        const database = client.db('Tinder')
+        const users = database.collection('users')
+        const returnedUsers = await users.find().toArray()
+        const ilosc = returnedUsers.map((user) => user.email).reduce((acc, curr) => regex.test(curr) ? acc + 1 : acc , 0)
+        res.status(200).send(`ilosc wynosi ${ilosc}`)
+    } catch (err) {
+        console.log(err)
+    }
+    finally
+    {
+        await client.close()
+    }
+})
+
+app.get('/agregate', async (req, res) => {
+    const client = new MongoClient(uri)
+
+    try {
+        await client.connect()
+        const database = client.db('Tinder')
+        const users = database.collection('users')
+        const aggregationResult = await users.aggregate([
+            {
+                $group: {
+                    _id: '$gender_identity',
+                    users: { $push: '$first_name',
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    users: { $slice: ['$users', 5] }
+                }
+            },
+            {
+                $limit: 3
+            },
+        ]).toArray();
+
+        res.status(200).send(aggregationResult);
+
+    } catch {
+
+    }
+})
+
+app.get('/imionaMatches', (req, res) => {
+
+    const client = new MongoClient(uri);
+
+    let users;
+
+    client.connect()
+        .then(() => {
+            const database = client.db('Tinder');
+            users = database.collection('users');
+            return users.find().toArray();
+        })
+        .then(user => {
+            const uzytkownicyZImionami = user.map(curr =>
+                Promise.all(
+                    curr.matches.map(match =>
+                        users.findOne({ "user_id": match.user_id })
+                            .then(matchUser => ({ [curr.first_name]: matchUser ? matchUser.first_name : null }))
+                    )
+                )
+            );
+
+            return Promise.all(uzytkownicyZImionami)
+                .then(result => {
+                    return result.flat();
+                });
+        })
+        .then(toReduce => {
+            const result = toReduce.reduce((acc, obj) => {
+                const user = Object.keys(obj)[0];
+                const value = obj[user];
+                if (!acc[user]) {
+                    acc[user] = [];
+                }
+                if (value){
+                    acc[user].push(value);
+                }
+                return acc;
+            }, {});
+
+            res.status(200).send(result);
+        })
+        .catch(error => {
+            res.status(400).send(error);
+        })
+        .finally(() => {
+            client.close()
+                .then((res) => console.log(res))
+                .catch((err) => console.log(err));
+        });
+});
 app.listen(PORT,
     () => console.log(`Server running on port ${PORT}`))
 
